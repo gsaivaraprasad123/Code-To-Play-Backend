@@ -29,6 +29,32 @@ const generationConfig = {
 
 // Route to generate Phaser.js game code
 app.post("/generate-game", async (req, res) => {
+  const SYSTEM_PROMPT = `You are an expert game developer specializing in creating 2D games using Phaser.js. 
+When given a game description, generate complete, working Phaser.js game code.
+
+Guidelines:
+1. Always create a complete game scene class named 'gameScene'
+2. Include preload(), create(), and update() methods
+3. Add proper physics, collisions, and game mechanics
+4. Include score tracking where appropriate
+5. Add game over conditions and restart functionality
+6. Use keyboard inputs (arrow keys, spacebar) for controls
+7. Ensure the code is clean, well-commented, and bug-free
+
+The code should work with this Phaser configuration:
+{
+  type: Phaser.AUTO,
+  width: 800,
+  height: 600,
+  physics: {
+    default: 'arcade',
+    arcade: {
+      gravity: { y: 0 },
+      debug: false
+    }
+  },
+  scene: gameScene
+}`;
   try {
     const { prompt } = req.body;
     if (!prompt) {
@@ -36,9 +62,7 @@ app.post("/generate-game", async (req, res) => {
     }
 
     const chatSession = model.startChat({ generationConfig, history: [] });
-    const result = await chatSession.sendMessage(
-      `Generate a complete full Phaser.js game code snippet only (without explanations or comments) for the following request: ${prompt}`
-    );
+    const result = await chatSession.sendMessage(`${SYSTEM_PROMPT} ${prompt}`);
 
     const gameCode = result.response.text().trim();
     if (!gameCode.includes("Phaser")) {
