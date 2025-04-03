@@ -15,8 +15,13 @@ if (!apiKey) {
   console.error("🚨 ERROR: GEMINI_API_KEY is missing in .env file");
   process.exit(1);
 }
-
-app.use(cors());
+app.use(
+  cors({
+    origin: "*", // Allows all origins (use caution in production)
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 app.use(express.json());
 
 const genAI = new GoogleGenerativeAI(apiKey);
