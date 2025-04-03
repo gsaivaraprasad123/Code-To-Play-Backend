@@ -15,13 +15,13 @@ if (!apiKey) {
   console.error("🚨 ERROR: GEMINI_API_KEY is missing in .env file");
   process.exit(1);
 }
-app.use(
-  cors({
-    origin: "*", // Allows all origins (use caution in production)
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  next();
+});
+
 app.use(express.json());
 
 const genAI = new GoogleGenerativeAI(apiKey);
