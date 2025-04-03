@@ -11,16 +11,21 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const apiKey = process.env.GEMINI_API_KEY;
 
+if (!apiKey) {
+  console.error("🚨 ERROR: GEMINI_API_KEY is missing in .env file");
+  process.exit(1);
+}
+
 app.use(cors());
 app.use(express.json());
 
 const genAI = new GoogleGenerativeAI(apiKey);
 const model = genAI.getGenerativeModel({
-  model: "gemini-2.0-flash",
+  model: "gemini-1.5-pro",
 });
 
 const generationConfig = {
-  temperature: 1,
+  temperature: 0.7,
   topP: 0.95,
   topK: 64,
   maxOutputTokens: 8192,
@@ -29,59 +34,32 @@ const generationConfig = {
 
 // Route to generate Phaser.js game code
 app.post("/generate-game", async (req, res) => {
-  const SYSTEM_PROMPT = `You are an expert game developer specializing in creating 2D games using Phaser.js.  
-Your task is to generate **fully functional and complete Phaser.js game code** based on a given game description.
+  const SYSTEM_PROMPT = `You are an expert game developer specializing in Phaser.js. Generate a **fully functional Phaser.js game** based on the given game description.
 
-### **Guidelines for the generated code:**
-1. **Complete Scene Class:** Define a Phaser scene named 'gameScene' with preload(), create(), and update() methods.
-2. **Game Assets:**
-   - Provide URLs for all required assets (images, sprites, sounds).
-   - Use publicly available assets or placeholder assets if necessary.
-3. **Physics and Mechanics:**
-   - Implement proper **physics and collision handling**.
-   - Ensure smooth movement and interactions.
-4. **Game Logic:**
-   - Implement **score tracking** and UI updates.
-   - Define clear **win/lose conditions**.
-   - Provide **restart functionality** for replayability.
-5. **Controls:**  
-   - Use **arrow keys** for movement.
-   - Spacebar or Enter for additional actions (jump, attack, shoot, etc.).
-6. **Code Quality:**  
-   - The code should be **well-commented** and easy to understand.
-   - Ensure the generated game runs **without errors**.
-7. **Phaser Configuration:**  
-   The generated code should work with this Phaser configuration:  
-   
-   \`\`\`js
-   const config = {
-     type: Phaser.AUTO,
-     width: 800,
-     height: 600,
-     physics: {
-       default: 'arcade',
-       arcade: {
-         gravity: { y: 0 },
-         debug: false
-       }
-     },
-     scene: gameScene
-   };
+### **Game Code Rules:**
+1. Provide a **working Phaser.js game** with \`preload()\`, \`create()\`, and \`update()\` functions.
+2. Use **publicly available asset URLs** for images, sprites, and sounds.
+3. Implement **physics, collision detection, and scoring** mechanics.
+4. Controls:  
+   - **Arrow keys** → Movement  
+   - **Spacebar** → Jump/Shoot  
+   - **R** → Restart game  
+5. The code must be **error-free, structured, and ready to run**.
+6. Output **only JavaScript code**, no explanations.
+7.Should also contain the proper physics and mechanics
 
-   const game = new Phaser.Game(config);
-   \`\`\`
+\`\`\`js
+const config = {
+  type: Phaser.AUTO,
+  width: 800,
+  height: 600,
+  physics: { default: 'arcade', arcade: { gravity: { y: 300 }, debug: false } },
+  scene: gameScene
+};
+const game = new Phaser.Game(config);
+\`\`\`
 
-8. **Ensure Code is Ready to Run:**  
-   - The output should be a **single JavaScript file** that can be included in an HTML page.  
-   - Make sure **no missing dependencies** or assets are required beyond what is provided.
-
-**Example Input Prompt:**  
-*A simple space shooter game where the player controls a spaceship using arrow keys. The player can shoot bullets using the spacebar to destroy enemy ships. The game tracks the score, and when the player loses all lives, the game ends with a restart button.*  
-
-**Expected Output:**  
-- A **Phaser.js game** with working movement, shooting mechanics, enemy AI, collision detection, and scoring.
-- Proper **asset URLs** for spaceship, bullets, and enemies.
-- Fully formatted, ready-to-run JavaScript code.`;
+Now generate a Phaser.js game as a **complete JavaScript file**.`;
 
   try {
     const { prompt } = req.body;
@@ -93,6 +71,7 @@ Your task is to generate **fully functional and complete Phaser.js game code** b
     const result = await chatSession.sendMessage(`${SYSTEM_PROMPT} ${prompt}`);
 
     const gameCode = result.response.text().trim();
+
     if (!gameCode.includes("Phaser")) {
       return res
         .status(500)
@@ -107,5 +86,5 @@ Your task is to generate **fully functional and complete Phaser.js game code** b
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`✅ Server is running on port ${PORT}`);
 });
